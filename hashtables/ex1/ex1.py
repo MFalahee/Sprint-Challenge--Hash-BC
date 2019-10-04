@@ -21,9 +21,8 @@ def get_indices_of_item_weights(weights, length, limit):
         target = limit - weights[i]
         if hash_table_retrieve(ht, target):
             we_got_it = hash_table_retrieve(ht, target)
-            # print('we', we_got_it, target)
-            # print('i', i, weights[i])
-            if weights[i] > target:
+            
+            if i > we_got_it:
                 answer = (i, we_got_it)
                 print(answer)
                 return answer 
