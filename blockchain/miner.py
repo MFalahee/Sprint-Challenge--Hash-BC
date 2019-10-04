@@ -22,11 +22,18 @@ def proof_of_work(last_proof):
     """
 
     start = timer()
-
+    print(last_proof)
     print("Searching for next proof")
-    proof = 0
-    #  TODO: Your code here
+    proof = last_proof - (random.randint(30000000, 900000000))
+    print(proof)
 
+    while valid_proof(last_proof, proof) is False:
+        if(timer() - start) >= 15:
+            proof = "NOT-FOUND"
+            break
+        proof -= 1
+
+    # valid_proof(last_proof, proof)
     print("Proof found: " + str(proof) + " in " + str(timer() - start))
     return proof
 
@@ -39,8 +46,13 @@ def valid_proof(last_hash, proof):
     IE:  last_hash: ...AE9123456, new hash 123456888...
     """
 
-    # TODO: Your code here!
-    pass
+    last_one = f'{last_hash}'.encode()
+    last_hashed = hashlib.sha256(last_one).hexdigest()
+    
+    proof_enc = f'{proof}'.encode()
+    proof_hashed = hashlib.sha256(proof_enc).hexdigest()
+
+    return last_hashed[-6:] == proof_hashed[:6]
 
 
 if __name__ == '__main__':
@@ -51,6 +63,8 @@ if __name__ == '__main__':
         node = "https://lambda-coin.herokuapp.com/api"
 
     coins_mined = 0
+    current = 0
+    last = 0
 
     # Load or create ID
     f = open("my_id.txt", "r")
@@ -66,15 +80,21 @@ if __name__ == '__main__':
         # Get the last proof from the server
         r = requests.get(url=node + "/last_proof")
         data = r.json()
+
         new_proof = proof_of_work(data.get('proof'))
+    
+        if new_proof == 'NOT-FOUND':
+            print("Skipping")
+            last = data.get('proof')
 
-        post_data = {"proof": new_proof,
-                     "id": id}
-
-        r = requests.post(url=node + "/mine", json=post_data)
-        data = r.json()
-        if data.get('message') == 'New Block Forged':
-            coins_mined += 1
-            print("Total coins mined: " + str(coins_mined))
         else:
-            print(data.get('message'))
+            post_data = {"proof": new_proof,
+                        "id": id}
+
+            r = requests.post(url=node + "/mine", json=post_data)
+            data = r.json()
+            if data.get('message') == 'None':
+                coins_mined += 1
+                print("Total coins mined: " + str(coins_mined))
+            else:
+                print(data.get('message'))
