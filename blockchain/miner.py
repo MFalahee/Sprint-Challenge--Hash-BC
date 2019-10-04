@@ -24,12 +24,15 @@ def proof_of_work(last_proof):
     start = timer()
     print(last_proof)
     print("Searching for next proof")
-    proof = last_proof + 3000
+    proof = last_proof + 30000000
+
     while valid_proof(last_proof, proof) is False:
+        if(timer() - start) >= 10:
+            proof = "NOT-FOUND"
+            break
         proof += 1
 
     # valid_proof(last_proof, proof)
-
     print("Proof found: " + str(proof) + " in " + str(timer() - start))
     return proof
 
@@ -78,14 +81,16 @@ if __name__ == '__main__':
         r = requests.get(url=node + "/last_proof")
         data = r.json()
         new_proof = proof_of_work(data.get('proof'))
-
-        post_data = {"proof": new_proof,
-                     "id": id}
-
-        r = requests.post(url=node + "/mine", json=post_data)
-        data = r.json()
-        if data.get('message') == 'New Block Forged':
-            coins_mined += 1
-            print("Total coins mined: " + str(coins_mined))
+        if new_proof == 'NOT-FOUND':
+            print("Skipping")
         else:
-            print(data.get('message'))
+            post_data = {"proof": new_proof,
+                        "id": id}
+
+            r = requests.post(url=node + "/mine", json=post_data)
+            data = r.json()
+            if data.get('message') == 'None':
+                coins_mined += 1
+                print("Total coins mined: " + str(coins_mined))
+            else:
+                print(data.get('message'))
