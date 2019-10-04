@@ -22,10 +22,13 @@ def proof_of_work(last_proof):
     """
 
     start = timer()
-
+    print(last_proof)
     print("Searching for next proof")
-    proof = 0
-    #  TODO: Your code here
+    proof = last_proof + 1000
+    while valid_proof(last_proof, proof) is False:
+        proof += 1
+
+    # valid_proof(last_proof, proof)
 
     print("Proof found: " + str(proof) + " in " + str(timer() - start))
     return proof
@@ -39,8 +42,15 @@ def valid_proof(last_hash, proof):
     IE:  last_hash: ...AE9123456, new hash 123456888...
     """
 
-    # TODO: Your code here!
-    pass
+    last_one = f'{last_hash}'.encode()
+    last_hashed = hashlib.sha256(last_one).hexdigest()
+    
+
+    proof_enc = f'{proof}'.encode()
+    proof_hashed = hashlib.sha256(proof_enc).hexdigest()
+
+
+    return last_hashed[-6:] == proof_hashed[:6]
 
 
 if __name__ == '__main__':
@@ -64,6 +74,7 @@ if __name__ == '__main__':
     # Run forever until interrupted
     while True:
         # Get the last proof from the server
+        print("# of coins mined:", coins_mined)
         r = requests.get(url=node + "/last_proof")
         data = r.json()
         new_proof = proof_of_work(data.get('proof'))
